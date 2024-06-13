@@ -104,6 +104,7 @@ transition_func:
     (TxPreparationRound, DONE): RandomnessTransactionSubmissionRound
     (TxPreparationRound, NO_MAJORITY): TxPreparationRound
     (TxPreparationRound, ROUND_TIMEOUT): TxPreparationRound
+    (TxPreparationRound, ERROR): ResetAndPauseRound
     (ValidateTransactionRound, DONE): ResetAndPauseRound
     (ValidateTransactionRound, NEGATIVE): CheckTransactionHistoryRound
     (ValidateTransactionRound, NONE): SelectKeeperTransactionSubmissionBRound

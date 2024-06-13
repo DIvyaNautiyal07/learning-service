@@ -46,6 +46,21 @@ def main() -> None:
             ] = f"${{str:{os.getenv('GNOSIS_LEDGER_RPC')}}}"
 
         # Params
+        if os.getenv("PRICE_TRACKER_CONTRACT_ADDRESS"):
+            config[-1]["models"]["params"]["args"][
+                "price_tracker_contract_address"
+            ] = f"${{str:{os.getenv('PRICE_TRACKER_CONTRACT_ADDRESS')}}}"  # type: ignore
+
+        if os.getenv("WXDAI_CONTRACT_ADDRESS"):
+            config[-1]["models"]["params"]["args"][
+                "wxdai_contract_address"
+            ] = f"${{str:{os.getenv('WXDAI_CONTRACT_ADDRESS')}}}"  # type: ignore
+
+        if os.getenv("TRANSFER_TARGET_ADDRESS"):
+            config[-1]["models"]["params"]["args"][
+                "transfer_target_address"
+            ] = f"${{str:{os.getenv('TRANSFER_TARGET_ADDRESS')}}}"  # type: ignore
+
         if os.getenv("COINGECKO_API_KEY"):
             config[-1]["models"]["params"]["args"][
                 "coingecko_api_key"

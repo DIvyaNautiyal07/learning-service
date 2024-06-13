@@ -7,19 +7,24 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiho3lkochqpmes4f235chq26oggmwnol3vjuvhosleoubbjirbwaq
-  behaviours.py: bafybeieqwi743sxsxxhe66umpi4kqafja462r26az73mhetcj6c4pscrl4
+  behaviours.py: bafybeigezdz7nrcst6mvgvci3ay6g2mpgeblwfxzm7ie7bjzgnsfwoo6aa
   dialogues.py: bafybeifqjbumctlffx2xvpga2kcenezhe47qhksvgmaylyp5ypwqgfar5u
-  fsm_specification.yaml: bafybeicxvornc7gpvpotob6z46fl7qmataxydn22fr22qnb4ausfg6vppe
+  fsm_specification.yaml: bafybeicitwm4meqniy5ewsaek5aj7o6c6e4pkosrbp44dwouv45viwg3tu
   handlers.py: bafybeigjadr4thz6hfpfx5abezbwnqhbxmachf4efasrn4z2vqhsqgnyvi
-  models.py: bafybeiagzhv7jukillz5ta47pbpgu554t22uz35vsf7ez55vs7yu6f3bni
-  payloads.py: bafybeidgjtjk2hxrhrlyzpavgbtz3wnjxoqfdw4lqkoty5whd4zzb473he
-  rounds.py: bafybeictdk3lz32inaynu2lkragkr525mgaw4t66lrvl3mmlpzerq77t6i
+  models.py: bafybeieq7h7esmznd2wexjlrgswfntcjpe6adhyqt4r2ex62vxsntgc66q
+  payloads.py: bafybeibsskhhcnhi6oeeoo3vh7mitzgx4xa6ckeamjdlrylo6rv2gethym
+  rounds.py: bafybeihlfileemsgpgkfjxwtikqmhxs2pmja776pxnzbh25wmq27bxjllm
 fingerprint_ignore_patterns: []
 connections: []
-contracts: []
-protocols: []
+contracts:
+- valory/price_tracker:0.1.0:bafybeieeib5nphyv4rosn3zhs576te5qy7icpvsrjncnrrpnsn5cuy73mq
+- valory/gnosis_safe:0.1.0:bafybeibq77mgzhyb23blf2eqmia3kc6io5karedfzhntvpcebeqdzrgyqa
+- valory/erc20:0.1.0:bafybeic3i4z6xw5ukt3m736t47ku3utzx4t7jux3nyax3mj35a7gzeszxm
+protocols:
+- valory/contract_api:1.0.0:bafybeidgu7o5llh26xp3u3ebq3yluull5lupiyeu6iooi2xyymdrgnzq5i
 skills:
 - valory/abstract_round_abci:0.1.0:bafybeih3enhagoql7kzpeyzzu2scpkif6y3ubakpralfnwxcvxexdyvy5i
+- valory/transaction_settlement_abci:0.1.0:bafybeigtzlk4uakmd54rxnznorcrstsr52kta474lgrnvx5ovr546vj7sq
 behaviours:
   main:
     args: {}
@@ -109,7 +114,7 @@ models:
         all_participants:
         - '0x0000000000000000000000000000000000000000'
         consensus_threshold: null
-        safe_contract_address: '0x0000000000000000000000000000000000000000'
+        safe_contract_address: '0x80f29f3f7e10C80CBcF11A74B1AC631397C5a385'
       share_tm_config_on_startup: false
       sleep_time: 1
       tendermint_check_sleep_delay: 3
@@ -120,9 +125,11 @@ models:
       tx_timeout: 10.0
       validate_timeout: 1205
       service_endpoint_base: https://learning.staging.autonolas.tech/
-      coingecko_price_template: https://api.coingecko.com/api/v3/simple/price?ids=autonolas&vs_currencies=usd&x_cg_demo_api_key={api_key}
-      coingecko_api_key: null
-      transfer_target_address: '0x0000000000000000000000000000000000000000'
+      coingecko_price_template: https://api.coingecko.com/api/v3/simple/price?ids=autonolas&vs_currencies=inr&x_cg_demo_api_key={api_key}
+      coingecko_api_key: CG-f9aMPjPMmLpnUJUbQ2Yw3LVL
+      price_tracker_contract_address: '0xeae6646e3405e60c51650f8a09e939cb1ad47cf1'
+      wxdai_contract_address: '0xE9D525c9FCF148fAFe023Ef805A18BFd6962959f'
+      transfer_target_address: '0x1c51259cc468a61793f1877923A28F89F9eA4F26'
     class_name: Params
   requests:
     args: {}
