@@ -102,7 +102,9 @@ class ERC20(Contract):
         """Build a deposit transaction."""
         contract_instance = cls.get_instance(ledger_api, contract_address)
         data = contract_instance.encodeABI("withdraw", args=(amount,))
-        return {"data": bytes.fromhex(data[2:])}
+        return dict(
+            data=data,
+        )
 
     @classmethod
     def build_approval_tx(
@@ -116,4 +118,6 @@ class ERC20(Contract):
         contract_instance = cls.get_instance(ledger_api, contract_address)
         checksumed_spender = ledger_api.api.to_checksum_address(spender)
         data = contract_instance.encodeABI("approve", args=(checksumed_spender, amount))
-        return {"data": bytes.fromhex(data[2:])}
+        return dict(
+            data=data,
+        )

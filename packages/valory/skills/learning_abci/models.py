@@ -54,10 +54,19 @@ class Params(BaseParams):
         self.wxdai_contract_address = self._ensure(
             "wxdai_contract_address", kwargs, str
         )
-        self.price_tracker_contract_address = self._ensure(
-            "price_tracker_contract_address", kwargs, str
+        self.portfolio_manager_contract_address = self._ensure(
+            "portfolio_manager_contract_address", kwargs, str
         )
         self.transfer_target_address = self._ensure(
             "transfer_target_address", kwargs, str
+        )
+        self.multisend_address = self._ensure(
+            "multisend_address", kwargs, str
+        )
+        self.buy_threshold = self._ensure(
+            "buy_threshold", kwargs, int
+        )
+        self.sell_threshold = self._ensure(
+            "sell_threshold", kwargs, int
         )
         super().__init__(*args, **kwargs)

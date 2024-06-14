@@ -19,8 +19,8 @@ contracts:
 - valory/gnosis_safe_proxy_factory:0.1.0:bafybeib6podeifufgmawvicm3xyz3uaplbcrsptjzz4unpseh7qtcpar74
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 - valory/service_registry:0.1.0:bafybeicbxmbzt757lbmyh6762lrkcrp3oeum6dk3z7pvosixasifsk6xlm
-- valory/price_tracker:0.1.0:bafybeieeib5nphyv4rosn3zhs576te5qy7icpvsrjncnrrpnsn5cuy73mq
-- valory/erc20:0.1.0:bafybeic3i4z6xw5ukt3m736t47ku3utzx4t7jux3nyax3mj35a7gzeszxm
+- valory/portfolio_manager:0.1.0:bafybeihb5eghjmoblfsgjs6rhw25mlzmsvl23vvs6kqfponoqb627ira6i
+- valory/erc20:0.1.0:bafybeiho4azy3r72tv76httkg2n3fpaytf4zvvc5s4wvf6jajwmnac7vim
 protocols:
 - open_aea/signing:1.0.0:bafybeihv62fim3wl2bayavfcg3u5e5cxu3b7brtu4cn5xoxd6lqwachasi
 - valory/abci:0.1.0:bafybeiaqmp7kocbfdboksayeqhkbrynvlfzsx4uy4x6nohywnmaig4an7u
@@ -33,8 +33,8 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihat4giyc4bz6zopvahcj4iw53356pbtwfn7p4d5yflwly2qhahum
 - valory/abstract_round_abci:0.1.0:bafybeih3enhagoql7kzpeyzzu2scpkif6y3ubakpralfnwxcvxexdyvy5i
-- valory/learning_abci:0.1.0:bafybeibpvbnwd647daeifnzlavotour2stwrzcpfe3a2fa7zey4sbzb7wy
-- valory/learning_chained_abci:0.1.0:bafybeigoxtusqk5752qw2mcooudh4cgz4vo5i3hxydwtswj35dgbat6t3y
+- valory/learning_abci:0.1.0:bafybeietuwka3japyvus6z7adsjptw44bmyey5au2j6bkw6qk5v5qoesri
+- valory/learning_chained_abci:0.1.0:bafybeidde52yrtdf25gi2fw46xepe336rmztu5agww5nef265hz4lojpdu
 - valory/registration_abci:0.1.0:bafybeiek7zcsxbucjwzgqfftafhfrocvc7q4yxllh2q44jeemsjxg3rcfm
 - valory/reset_pause_abci:0.1.0:bafybeidw4mbx3os3hmv7ley7b3g3gja7ydpitr7mxbjpwzxin2mzyt5yam
 - valory/termination_abci:0.1.0:bafybeihq6qtbwt6i53ayqym63vhjexkcppy26gguzhhjqywfmiuqghvv44
@@ -148,7 +148,6 @@ models:
       keeper_timeout: 30.0
       max_attempts: 10
       max_healthcheck: 120
-      multisend_address: ${str:0x0000000000000000000000000000000000000000}
       termination_sleep: ${int:900}
       init_fallback_gas: 0
       keeper_allowed_retries: 3
@@ -189,6 +188,9 @@ models:
       coingecko_api_key: ${str:CG-f9aMPjPMmLpnUJUbQ2Yw3LVL}
       default_chain_id: ${str:gnosis}
       termination_from_block: ${int:34088325}
-      price_tracker_contract_address: ${str:0xeae6646e3405e60c51650f8a09e939cb1ad47cf1}
+      portfolio_manager_contract_address: ${str:0xF8d61603D3972eb49582E5fCf324EEF9E76a386D}
       wxdai_contract_address: ${str:0xE9D525c9FCF148fAFe023Ef805A18BFd6962959f}
       transfer_target_address: ${str:0x615d3278680337e2D39C3bc5042D959C7938B917}
+      buy_threshold: ${int:145}
+      sell_threshold: ${int:150}
+      multisend_address: ${str:0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761}
