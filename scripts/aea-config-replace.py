@@ -51,20 +51,10 @@ def main() -> None:
                 "portfolio_manager_contract_address"
             ] = f"${{str:{os.getenv('PORTFOLIO_MANAGER_CONTRACT_ADDRESS')}}}"  # type: ignore
 
-        if os.getenv("WXDAI_CONTRACT_ADDRESS"):
+        if os.getenv("PORTFOLIO_TOKEN_LIST"):
             config[-1]["models"]["params"]["args"][
-                "wxdai_contract_address"
-            ] = f"${{str:{os.getenv('WXDAI_CONTRACT_ADDRESS')}}}"  # type: ignore
-        
-        if os.getenv("BUY_THRESHOLD"):
-            config[-1]["models"]["params"]["args"][
-                "buy_threshold"
-            ] = f"${{int:{os.getenv('BUY_THRESHOLD')}}}"  # type: ignore
-
-        if os.getenv("SELL_THRESHOLD"):
-            config[-1]["models"]["params"]["args"][
-                "sell_threshold"
-            ] = f"${{int:{os.getenv('SELL_THRESHOLD')}}}"  # type: ignore
+                "portfolio_token_list"
+            ] = f"${{list:{os.getenv('PORTFOLIO_TOKEN_LIST')}}}"  # type: ignore
 
         if os.getenv("MULTISEND_ADDRESS"):
             config[-1]["models"]["params"]["args"][

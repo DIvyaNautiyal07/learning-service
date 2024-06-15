@@ -4,13 +4,13 @@ from typing import Any, Dict, List, Optional, cast
 from aea.common import JSONLike
 from aea.configurations.base import PublicId
 from aea.contracts.base import Contract
-from aea_ledger_ethereum import EthereumApi, LedgerApi
-from web3.types import BlockIdentifier, Nonce, TxParams, Wei
+from aea_ledger_ethereum import LedgerApi
 
-PUBLIC_ID = PublicId.from_str("valory/portflio_manager:0.1.0")
+PUBLIC_ID = PublicId.from_str("valory/portfolio_manager:0.1.0")
 
 class PortfolioManagerContract(Contract):
     contract_id = PUBLIC_ID
+
     @classmethod
     def get_raw_transaction(
         cls, ledger_api: LedgerApi, contract_address: str, **kwargs: Any
@@ -39,14 +39,17 @@ class PortfolioManagerContract(Contract):
         contract_address: str,
         token: str,
         amount: int,
+        buyer: str
     ) -> Dict[str, Any]:
         contract_instance = cls.get_instance(ledger_api, contract_address)
         checksumed_token = ledger_api.api.to_checksum_address(token)
+        checksumed_buyer = ledger_api.api.to_checksum_address(buyer)
         tx_data = contract_instance.encodeABI(
             fn_name="simulateBuy",
             args=[
                 checksumed_token,
-                amount
+                amount,
+                checksumed_buyer
             ],
         )
         
@@ -61,17 +64,32 @@ class PortfolioManagerContract(Contract):
         contract_address: str,
         token: str,
         amount: int,
+        seller: str
     ) -> Dict[str, Any]:
         contract_instance = cls.get_instance(ledger_api, contract_address)
         checksumed_token = ledger_api.api.to_checksum_address(token)
+        checksumed_seller = ledger_api.api.to_checksum_address(seller)
         tx_data = contract_instance.encodeABI(
             fn_name="simulateSell",
             args=[
                 checksumed_token,
-                amount
+                amount,
+                checksumed_seller
             ],
         )
         
         return dict(
             data=tx_data,
         )
+        
+    @classmethod
+    def get_check_deviation_tx(
+        cls,
+        ledger_api: LedgerApi,
+        contract_address: str,
+        token: str
+    ) -> Dict[str, Any]:
+        contract_instance = cls.get_instance(ledger_api, contract_address)
+        checksumed_token = ledger_api.api.to_checksum_address(token)
+        deviation = contract_instance.functions.checkDeviation(checksumed_token).call()
+        return dict(data=deviation)

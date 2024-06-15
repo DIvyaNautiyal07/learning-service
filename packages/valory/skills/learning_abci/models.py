@@ -19,7 +19,7 @@
 
 """This module contains the shared state for the abci skill of LearningAbciApp."""
 
-from typing import Any
+from typing import Any, List
 
 from packages.valory.skills.abstract_round_abci.models import BaseParams
 from packages.valory.skills.abstract_round_abci.models import (
@@ -51,8 +51,8 @@ class Params(BaseParams):
             "coingecko_price_template", kwargs, str
         )
         self.coingecko_api_key = kwargs.get("coingecko_api_key", None)
-        self.wxdai_contract_address = self._ensure(
-            "wxdai_contract_address", kwargs, str
+        self.portfolio_token_list = self._ensure(
+            "portfolio_token_list", kwargs, List[str]
         )
         self.portfolio_manager_contract_address = self._ensure(
             "portfolio_manager_contract_address", kwargs, str
@@ -60,13 +60,11 @@ class Params(BaseParams):
         self.transfer_target_address = self._ensure(
             "transfer_target_address", kwargs, str
         )
-        self.multisend_address = self._ensure(
-            "multisend_address", kwargs, str
-        )
-        self.buy_threshold = self._ensure(
-            "buy_threshold", kwargs, int
-        )
-        self.sell_threshold = self._ensure(
-            "sell_threshold", kwargs, int
+        # UNABLE TO RESOLVE THE ERROR aea.exceptions.AEAEnforceError: 'multisend_address' of type '<class 'str'>' required, but it is not set in `models.params.args` of `skill.yaml` of `valory/learning_chained_abci:0.1.0`
+        # self.multisend_address = self._ensure(
+        #     "multisend_address", kwargs, str
+        # )
+        self.decision_threshold = self._ensure(
+            "decision_threshold", kwargs, int
         )
         super().__init__(*args, **kwargs)

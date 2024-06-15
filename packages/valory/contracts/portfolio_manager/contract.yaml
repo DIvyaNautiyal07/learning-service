@@ -7,8 +7,8 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiajm5fcftn6g3ki7udj6mgxjzefaqd6hcp43adx7djwum2duu42ty
-  build/PortfolioManager.json: bafybeiduuhggazovykhx4gzgp2dtflsah5desmyacsbj7eukc2xgtxfw7a
-  contract.py: bafybeibhahoh5z2nuhile67z6mnj4cs4js5orkyebjztgpdbslf6tntwdy
+  build/PortfolioManager.json: bafybeidhcz7u63t2ci6o4vuxnijsmbwp2ki5kznd74eya22u3pyi4fhtjy
+  contract.py: bafybeih5ivnfhvb6oee4g5wk72rziiklutjk36x6aygx44zg2tatchl6ju
 fingerprint_ignore_patterns: []
 contracts: []
 class_name: PortfolioManagerContract
