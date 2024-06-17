@@ -11,12 +11,22 @@ This service interacts with the Portfolio Manager contract to manage a user's po
 The Portfolio Manager contract tracks the percentage of tokens a user wants to maintain in their portfolio. For testing purposes, custom ERC-20 tokens have been deployed. The service queries the contract to check the percentage deviation for a particular token and decides how to balance the portfolio based on this information.
 
 ## Current Logic
+### Transaction Decision Logic
+The service fetches the price of token from external api and then decides whether to buy, sell, or hold tokens based on the deviation from the target allocation and the current price:
+  1. **Retrieve Deviation**: Get the current deviation from the Portfolio Manager contract.
+  2. **Fetch Current Price**: Use the current token price from synchronized data.
+  3. **Decision Conditions**:
+      - **Sell**: If the deviation is positive and exceeds the threshold, and the price is within the sell range.
+      - **Buy**: If the deviation is negative and exceeds the threshold, and the price is within the buy range.
+      - **Hold**: If neither condition is met, no transaction is made.
+This logic ensures transactions occur only when both the deviation and price conditions are favorable, leading to informed portfolio management.
+
 ### Rebalancing Rules
 - Rebalancing rules are stored on IPFS and can be retrieved to make informed decisions. Although these rules have not yet been used in the current code, they provide a foundation for implementing more sophisticated rebalancing strategies in the future.
 ### Deviation Check
-- Positive Deviation : The service decides to sell the token.
+- **Positive Deviation** : The service decides to sell the token.
   - It calls a function in the Portfolio Manager contract, transferring the token from the Gnosis Safe to the seller's address.
-- Negative Deviation: The service decides to buy the token.
+- **Negative Deviation**: The service decides to buy the token.
   - It calls a function in the Portfolio Manager contract, transferring the token from the buyer to the Gnosis Safe.
 
 ### Transaction Workflow
