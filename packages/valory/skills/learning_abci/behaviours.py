@@ -192,7 +192,7 @@ class TxPreparationBehaviour(
         Check whether sell or buy txn needs to be made
         If sell, then bundle approve txn with that
         """
-        token = self.params.portfolio_token_list[0]
+        token = self.params.portfolio_token
 
         (decision, amount) = yield from self._get_token_rebalance_amount(token)
         self.context.logger.info(f" PORTFOLIO REBALANCE DECISION: {decision}")
@@ -348,7 +348,7 @@ class TxPreparationBehaviour(
 
         return transactions
     
-    def _get_safe_tx_hash(self, data: bytes, to_address: str, ) -> Generator[None, None, Optional[str]]:
+    def _get_safe_tx_hash(self, data: bytes, to_address: str, is_multisend: bool = False) -> Generator[None, None, Optional[str]]:
         """
         Prepares and returns the safe tx hash.
 
@@ -358,18 +358,21 @@ class TxPreparationBehaviour(
         :param data: the safe tx data. This is the data of the function being called, in this case `updateWeightGradually`.
         :return: the tx hash
         """
-        response = yield from self.get_contract_api_response(
-            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
-            contract_address=self.synchronized_data.safe_contract_address,  # the safe contract address
-            contract_id=str(GnosisSafeContract.contract_id),
-            contract_callable="get_raw_safe_transaction_hash",
-            to_address = to_address,
-            value=self.ETHER_VALUE,
-            data=data,
-            safe_tx_gas=SAFE_GAS,
-            operation=SafeOperation.DELEGATE_CALL.value,
-        )
-        self.context.logger.info(f"PREPARED SAFE TXN:{response}")
+        contract_api_kwargs = {
+            "performative": ContractApiMessage.Performative.GET_STATE,  # type: ignore
+            "contract_address": self.synchronized_data.safe_contract_address,  # the safe contract address
+            "contract_id": str(GnosisSafeContract.contract_id),
+            "contract_callable": "get_raw_safe_transaction_hash",
+            "to_address": to_address,
+            "value": self.ETHER_VALUE,
+            "data": data,
+            "safe_tx_gas": SAFE_GAS,
+        }
+        
+        if is_multisend:
+            contract_api_kwargs["operation"] = SafeOperation.DELEGATE_CALL.value
+
+        response = yield from self.get_contract_api_response(**contract_api_kwargs)
 
         if response.performative != ContractApiMessage.Performative.STATE:
             self.context.logger.error(
@@ -387,7 +390,7 @@ class TxPreparationBehaviour(
         """Given a list of transactions, bundle them together in a single multisend tx."""
         multi_send_txs = []
 
-        multi_send_approve_tx = self._to_multisend_format(txs[0], self.params.portfolio_token_list[0])
+        multi_send_approve_tx = self._to_multisend_format(txs[0], self.params.portfolio_token)
         multi_send_txs.append(multi_send_approve_tx)
 
         multi_send_sell_tx = self._to_multisend_format(txs[1], self.params.portfolio_manager_contract_address)
@@ -414,7 +417,7 @@ class TxPreparationBehaviour(
         # strip "0x" from the response
         multisend_data_str = cast(str, response.raw_transaction.body["data"])[2:]
         tx_data = bytes.fromhex(multisend_data_str)
-        tx_hash = yield from self._get_safe_tx_hash(tx_data, self.MULTISEND_ADDRESS)
+        tx_hash = yield from self._get_safe_tx_hash(tx_data, self.MULTISEND_ADDRESS, is_multisend=True)
         
         if tx_hash is None:
             return None

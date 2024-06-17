@@ -51,10 +51,10 @@ def main() -> None:
                 "portfolio_manager_contract_address"
             ] = f"${{str:{os.getenv('PORTFOLIO_MANAGER_CONTRACT_ADDRESS')}}}"  # type: ignore
 
-        if os.getenv("PORTFOLIO_TOKEN_LIST"):
+        if os.getenv("PORTFOLIO_TOKEN"):
             config[-1]["models"]["params"]["args"][
-                "portfolio_token_list"
-            ] = f"${{list:{os.getenv('PORTFOLIO_TOKEN_LIST')}}}"  # type: ignore
+                "portfolio_token"
+            ] = f"${{str:{os.getenv('PORTFOLIO_TOKEN')}}}"  # type: ignore
 
         if os.getenv("MULTISEND_ADDRESS"):
             config[-1]["models"]["params"]["args"][

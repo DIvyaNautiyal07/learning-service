@@ -51,8 +51,8 @@ class Params(BaseParams):
             "coingecko_price_template", kwargs, str
         )
         self.coingecko_api_key = kwargs.get("coingecko_api_key", None)
-        self.portfolio_token_list = self._ensure(
-            "portfolio_token_list", kwargs, List[str]
+        self.portfolio_token = self._ensure(
+            "portfolio_token", kwargs, str
         )
         self.portfolio_manager_contract_address = self._ensure(
             "portfolio_manager_contract_address", kwargs, str
