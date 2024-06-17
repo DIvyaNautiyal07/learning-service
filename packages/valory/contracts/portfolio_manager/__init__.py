@@ -17,4 +17,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the support resources for the price_tracker_contract contract."""
+"""This module contains the support resources for the portfolio_manager_contract contract."""

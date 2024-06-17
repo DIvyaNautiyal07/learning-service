@@ -1,0 +1,21 @@
+name: portfolio_manager
+author: valory
+version: 0.1.0
+type: contract
+description: The contract package for the Portfolio Manager contract.
+license: Apache-2.0
+aea_version: '>=1.0.0, <2.0.0'
+fingerprint:
+  __init__.py: bafybeiajm5fcftn6g3ki7udj6mgxjzefaqd6hcp43adx7djwum2duu42ty
+  build/PortfolioManager.json: bafybeidhcz7u63t2ci6o4vuxnijsmbwp2ki5kznd74eya22u3pyi4fhtjy
+  contract.py: bafybeih5ivnfhvb6oee4g5wk72rziiklutjk36x6aygx44zg2tatchl6ju
+fingerprint_ignore_patterns: []
+contracts: []
+class_name: PortfolioManagerContract
+contract_interface_paths:
+  ethereum: build/PortfolioManager.json
+dependencies:
+  open-aea-ledger-ethereum:
+    version: ==1.50.0
+  web3:
+    version: <7,>=6.0.0

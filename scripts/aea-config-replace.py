@@ -46,15 +46,20 @@ def main() -> None:
             ] = f"${{str:{os.getenv('GNOSIS_LEDGER_RPC')}}}"
 
         # Params
-        if os.getenv("PRICE_TRACKER_CONTRACT_ADDRESS"):
+        if os.getenv("PORTFOLIO_MANAGER_CONTRACT_ADDRESS"):
             config[-1]["models"]["params"]["args"][
-                "price_tracker_contract_address"
-            ] = f"${{str:{os.getenv('PRICE_TRACKER_CONTRACT_ADDRESS')}}}"  # type: ignore
+                "portfolio_manager_contract_address"
+            ] = f"${{str:{os.getenv('PORTFOLIO_MANAGER_CONTRACT_ADDRESS')}}}"  # type: ignore
 
-        if os.getenv("WXDAI_CONTRACT_ADDRESS"):
+        if os.getenv("PORTFOLIO_TOKEN"):
             config[-1]["models"]["params"]["args"][
-                "wxdai_contract_address"
-            ] = f"${{str:{os.getenv('WXDAI_CONTRACT_ADDRESS')}}}"  # type: ignore
+                "portfolio_token"
+            ] = f"${{str:{os.getenv('PORTFOLIO_TOKEN')}}}"  # type: ignore
+
+        if os.getenv("MULTISEND_ADDRESS"):
+            config[-1]["models"]["params"]["args"][
+                "multisend_address"
+            ] = f"${{str:{os.getenv('MULTISEND_ADDRESS')}}}"  # type: ignore
 
         if os.getenv("TRANSFER_TARGET_ADDRESS"):
             config[-1]["models"]["params"]["args"][
@@ -65,6 +70,16 @@ def main() -> None:
             config[-1]["models"]["params"]["args"][
                 "coingecko_api_key"
             ] = f"${{str:{os.getenv('COINGECKO_API_KEY')}}}"  # type: ignore
+
+        if os.getenv("SAFE_CONTRACT_ADDRESS"):
+            config[-1]["models"]["params"]["args"]["setup"][
+                "safe_contract_address"
+            ] = f"${{str:{os.getenv('SAFE_CONTRACT_ADDRESS')}}}" 
+        
+        if os.getenv("ALL_PARTICIPANTS"):
+            config[-1]["models"]["params"]["args"]["setup"][
+                "all_participants"
+            ] = f"${{list:{os.getenv('ALL_PARTICIPANTS')}}}" 
 
     with open(Path("learning_agent", "aea-config.yaml"), "w", encoding="utf-8") as file:
         yaml.dump_all(config, file, sort_keys=False)

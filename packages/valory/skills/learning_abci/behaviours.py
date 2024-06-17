@@ -20,11 +20,18 @@
 """This package contains round behaviours of LearningAbciApp."""
 
 from abc import ABC
-from typing import Generator, Set, Type, cast, Optional
-
-from packages.valory.contracts.price_tracker.contract import PriceTrackerContract
+from typing import Generator, Set, List, Type, cast, Optional, Dict, Any, Tuple, Union
+from hexbytes import HexBytes
+from packages.valory.contracts.portfolio_manager.contract import PortfolioManagerContract
 from packages.valory.contracts.erc20.contract import ERC20
-from packages.valory.contracts.gnosis_safe.contract import GnosisSafeContract
+from packages.valory.contracts.gnosis_safe.contract import (
+    GnosisSafeContract,
+    SafeOperation
+)
+from packages.valory.contracts.multisend.contract import (
+    MultiSendContract,
+    MultiSendOperation,
+)
 from packages.valory.protocols.contract_api import ContractApiMessage
 from packages.valory.skills.abstract_round_abci.base import AbstractRound
 from packages.valory.skills.abstract_round_abci.behaviours import (
@@ -49,6 +56,7 @@ from packages.valory.skills.transaction_settlement_abci.payload_tools import (
     hash_payload_to_hex,
 )
 
+
 import json
 
 HTTP_OK = 200
@@ -57,8 +65,8 @@ TX_DATA = b"0x"
 SAFE_GAS = 0
 VALUE_KEY = "value"
 TO_ADDRESS_KEY = "to_address"
-
-
+SELL = "sell"
+BUY = "buy"
 class LearningBaseBehaviour(BaseBehaviour, ABC):  # pylint: disable=too-many-ancestors
     """Base behaviour for the learning_abci skill."""
 
@@ -117,7 +125,6 @@ class APICheckBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
 
         try:
             response_data = json.loads(decoded_response)
-            self.context.logger.info(f"JSON RESPONSE: {response_data}")
             price = response_data['autonolas']['inr']
             return price
         except json.JSONDecodeError:
@@ -138,7 +145,8 @@ class DecisionMakingBehaviour(
         with self.context.benchmark_tool.measure(self.behaviour_id).local(): 
             if self.synchronized_data.price == None:
                 event = Event.ERROR.value
-            elif self.synchronized_data.price > 160:
+            #implement custom logic to check the condition for portfolio rebalance
+            elif self.synchronized_data.price > self.params.decision_threshold:
                 event= Event.TRANSACT.value
             else:
                 event= Event.DONE.value
@@ -159,71 +167,159 @@ class TxPreparationBehaviour(
 
     matching_round: Type[AbstractRound] = TxPreparationRound
     ETHER_VALUE = 0
+    MULTISEND_ADDRESS = "0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761"
+    SELLER_ADDRESS = "0xBd748eeb04623605BC1566b3F7F7f3e904f9Fe6D"
+    BUYER_ADDRESS = "0x82a05d94630479e409ee235E8A8C5B65c7f7560e"
 
     def async_act(self) -> Generator:
         """Do the act, supporting asynchronous execution."""
 
         with self.context.benchmark_tool.measure(self.behaviour_id).local():
-            safe_tx = yield from self.build_transfer_txn()
-            # safe_tx = yield from self.build_wxdai_transfer_txn()
-            # safe_tx = yield from self.build_update_price_txn()
+            update_portfolio_payload = yield from self.get_portfolio_update()
 
         with self.context.benchmark_tool.measure(self.behaviour_id).consensus():
             payload = TxPreparationPayload(
                 self.context.agent_address,
-                safe_tx
+                update_portfolio_payload
             )
             yield from self.send_a2a_transaction(payload)
             yield from self.wait_until_round_end()
 
         self.set_done()
 
-    def build_transfer_txn(self) -> Generator[None, None, Optional[str]]:
-        calldata = {"value": 10**18, "to_address": self.params.transfer_target_address}
+    def get_portfolio_update(self) -> Generator[None, None, str]:
+        """
+        Check whether sell or buy txn needs to be made
+        If sell, then bundle approve txn with that
+        """
+        token = self.params.portfolio_token
+
+        (decision, amount) = yield from self._get_token_rebalance_amount(token)
+        self.context.logger.info(f" PORTFOLIO REBALANCE DECISION: {decision}")
+
+        if decision is None:
+            return "{}"
+        
+        if decision is BUY:
+            safe_txn = yield from self._build_buy_txn(amount, token)
+            return safe_txn
+        
+        elif decision is SELL:
+            transactions = yield from self._build_approve_and_buy_txns(amount, token)
+            if transactions is None:
+                return "{}"
+            
+            payload_data = yield from self._get_multisend_tx(transactions)
+            self.context.logger.info(f"MULTISEND TRANSACTIONS {payload_data}")
+            if payload_data is None:
+                return "{}"
+            return payload_data
+
+    def _get_token_rebalance_amount(self, token:str) -> Generator[None, None, Union[int, Tuple[str, int]]]:
+        #check the deviation in portfolio for the token and based on that take a decision
+        response = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
+            contract_id=str(PortfolioManagerContract.contract_id),
+            contract_callable="get_check_deviation_tx",
+            contract_address=self.params.portfolio_manager_contract_address,
+            token = token
+        )
+
+        deviation = response.state.body['data']       
+        self.context.logger.info(f"DEVIATION IN TOKEN PERCENTAGE RETRIEVED FROM CONTRACT: {deviation}")
+        amount = 10**18
+
+        #We can implement logic to get the amount of token based that we need to sell or buy based on the deviation
+        if deviation is None:
+            return ()     
+        if deviation < 0:
+            return (BUY, amount)
+        else:
+            return (SELL, amount)
+
+    
+    def _build_buy_txn(self, amount:int, token:str) -> Generator[None, None, str]:
 
         response = yield from self.get_contract_api_response(
-            performative=ContractApiMessage.Performative.GET_STATE,
-            contract_address = self.synchronized_data.safe_contract_address,
-            contract_id= str(GnosisSafeContract.contract_id),
-            contract_callable="get_raw_safe_transaction_hash",
-            safe_tx_gas = SAFE_GAS,
-            data=b"0x",
-            **calldata
+            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
+            contract_id=str(PortfolioManagerContract.contract_id),
+            contract_callable="get_simulate_buy_tx",
+            contract_address=self.params.portfolio_manager_contract_address,
+            token=token,
+            amount=amount,
+            buyer=self.BUYER_ADDRESS
         )
+
+        self.context.logger.info(f"BUY TXN: {response}")
 
         if response.performative != ContractApiMessage.Performative.STATE:
             self.context.logger.error(
-                f"TxPreparationBehaviour says: Couldn't get safe hash. "
+                f"TxPreparationBehaviour says: Couldn't get tx data for the txn. "
                 f"Expected response performative {ContractApiMessage.Performative.STATE.value}, "  # type: ignore
                 f"received {response.performative.value}."
             )
+            return None
+
+        data_str = cast(str, response.state.body["data"])[2:]
+        txn = bytes.fromhex(data_str)
+
+        if txn is None:
             return "{}"
-        
-        self.context.logger.info(f"PREPARED SAFE TXN:{response}")
 
-        safe_tx_hash = cast(str, response.state.body["tx_hash"])[2:]
-
-        tx_hash = hash_payload_to_hex(
-            safe_tx_hash,
-            calldata["value"],
-            SAFE_GAS,
-            calldata["to_address"],
-            data=b"0x"
+        safe_tx_hash = yield from self._get_safe_tx_hash(
+            txn,
+            self.params.portfolio_manager_contract_address
         )
-        
-        self.context.logger.info(f"FINAL TXN HASH:{tx_hash}")
-        return tx_hash
 
-    def build_wxdai_transfer_txn(self) -> Generator[None, None, str]:
-        
+        if safe_tx_hash is None:
+            return "{}"
+
+        payload_data = hash_payload_to_hex(
+            safe_tx_hash=safe_tx_hash,
+            to_address=self.params.portfolio_manager_contract_address,
+            ether_value=self.ETHER_VALUE,  # we don't send any eth
+            safe_tx_gas=SAFE_GAS,
+            data=txn,
+        )
+
+        return payload_data
+    
+    def _build_sell_txn(self, amount:int, token:str) -> Generator[None, None, Optional[bytes]]:
+        response = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
+            contract_id=str(PortfolioManagerContract.contract_id),
+            contract_callable="get_simulate_sell_tx",
+            contract_address=self.params.portfolio_manager_contract_address,
+            token=token,
+            amount=amount,
+            seller=self.SELLER_ADDRESS
+        )
+
+        self.context.logger.info(f"SELL TXN: {response}")
+
+        if response.performative != ContractApiMessage.Performative.STATE:
+            self.context.logger.error(
+                f"TxPreparationBehaviour says: Couldn't get tx data for the txn. "
+                f"Expected response performative {ContractApiMessage.Performative.STATE.value}, "  # type: ignore
+                f"received {response.performative.value}."
+            )
+            return None
+
+        data_str = cast(str, response.state.body["data"])[2:]
+        data = bytes.fromhex(data_str)
+        return data
+    
+    def _build_approve_txn(self, amount:int, token:str) -> Generator[None, None, Optional[bytes]]:
         response = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
             contract_id=str(ERC20.contract_id),
-            contract_callable="build_transfer_tx",
-            contract_address=self.params.wxdai_contract_address,
-            to=self.params.transfer_target_address,
-            amount=10**19
+            contract_callable="build_approval_tx",
+            contract_address=token,
+            spender=self.params.portfolio_manager_contract_address,
+            amount=amount
         )
+
+        self.context.logger.info(f"APPROVE TXN: {response}")
 
         if response.performative != ContractApiMessage.Performative.STATE:
             self.context.logger.error(
@@ -233,81 +329,26 @@ class TxPreparationBehaviour(
             )
             return None
 
-        self.context.logger.info(f"UPDATE PRICE TX: {response}")
         data_str = cast(str, response.state.body["data"])[2:]
-        txn = bytes.fromhex(data_str)
-
-        self.context.logger.info(f"TxPreparationBehaviour says: TOKEN TRANSFER TX: {txn}")
-
-        if txn is None:
-            return "{}"
-
-        safe_tx_hash = yield from self._get_safe_tx_hash(
-            txn
-        )
-
-        if safe_tx_hash is None:
-            return "{}"
-
-        # params here need to match those in _get_safe_tx_hash()
-        payload_data = hash_payload_to_hex(
-            safe_tx_hash=safe_tx_hash,
-            ether_value=self.ETHER_VALUE,  # we don't send any eth
-            safe_tx_gas=SAFE_GAS,
-            to_address=self.params.wxdai_contract_address,
-            data=txn,
-        )
-
-        return payload_data
+        data = bytes.fromhex(data_str)
+        return data
     
-    def build_update_price_txn(self) -> Generator[None, None, str]:
-        price = int(self.synchronized_data.price)
+    def _build_approve_and_buy_txns(self, amount:int, token:str) -> Generator[None, None, Optional[List[bytes]]]:
+        transactions: List[bytes] = []
 
-        response = yield from self.get_contract_api_response(
-            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
-            contract_id=str(PriceTrackerContract.contract_id),
-            contract_callable="get_update_price_tx",
-            contract_address=self.params.price_tracker_contract_address,
-            price=price,
-        )
+        approve_tx_data = yield from self._build_approve_txn(amount, token)
+        if approve_tx_data is None:
+                return None      
+        transactions.append(approve_tx_data)
 
-        if response.performative != ContractApiMessage.Performative.STATE:
-            self.context.logger.error(
-                f"TxPreparationBehaviour says: Couldn't get tx data for the txn. "
-                f"Expected response performative {ContractApiMessage.Performative.STATE.value}, "  # type: ignore
-                f"received {response.performative.value}."
-            )
-            return None
+        sell_tx_data = yield from self._build_sell_txn(amount, token)
+        if sell_tx_data is None:
+                return None      
+        transactions.append(sell_tx_data)
 
-        self.context.logger.info(f"UPDATE PRICE TX: {response}")
-
-        data_str = cast(str, response.state.body["data"])[2:]
-        txn = bytes.fromhex(data_str)
-
-        if txn is None:
-            return "{}"
-
-        safe_tx_hash = yield from self._get_safe_tx_hash(
-            txn
-        )
-
-        if safe_tx_hash is None:
-            return "{}"
-
-        # params here need to match those in _get_safe_tx_hash()
-        payload_data = hash_payload_to_hex(
-            safe_tx_hash=safe_tx_hash,
-            ether_value=self.ETHER_VALUE,  # we don't send any eth
-            safe_tx_gas=SAFE_GAS,
-            to_address=self.params.wxdai_contract_address,
-            data=txn,
-        )
-
-        return payload_data
+        return transactions
     
-    
-    
-    def _get_safe_tx_hash(self, data: bytes) -> Generator[None, None, Optional[str]]:
+    def _get_safe_tx_hash(self, data: bytes, to_address: str, is_multisend: bool = False) -> Generator[None, None, Optional[str]]:
         """
         Prepares and returns the safe tx hash.
 
@@ -317,17 +358,21 @@ class TxPreparationBehaviour(
         :param data: the safe tx data. This is the data of the function being called, in this case `updateWeightGradually`.
         :return: the tx hash
         """
-        response = yield from self.get_contract_api_response(
-            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
-            contract_address=self.synchronized_data.safe_contract_address,  # the safe contract address
-            contract_id=str(GnosisSafeContract.contract_id),
-            contract_callable="get_raw_safe_transaction_hash",
-            to_address=self.params.wxdai_contract_address,  # the contract the safe will invoke
-            value=self.ETHER_VALUE,
-            data=data,
-            safe_tx_gas=SAFE_GAS,
-        )
-        self.context.logger.info(f"PREPARED SAFE TXN:{response}")
+        contract_api_kwargs = {
+            "performative": ContractApiMessage.Performative.GET_STATE,  # type: ignore
+            "contract_address": self.synchronized_data.safe_contract_address,  # the safe contract address
+            "contract_id": str(GnosisSafeContract.contract_id),
+            "contract_callable": "get_raw_safe_transaction_hash",
+            "to_address": to_address,
+            "value": self.ETHER_VALUE,
+            "data": data,
+            "safe_tx_gas": SAFE_GAS,
+        }
+        
+        if is_multisend:
+            contract_api_kwargs["operation"] = SafeOperation.DELEGATE_CALL.value
+
+        response = yield from self.get_contract_api_response(**contract_api_kwargs)
 
         if response.performative != ContractApiMessage.Performative.STATE:
             self.context.logger.error(
@@ -341,7 +386,61 @@ class TxPreparationBehaviour(
         tx_hash = cast(str, response.state.body["tx_hash"])[2:]
         return tx_hash
 
+    def _get_multisend_tx(self, txs: List[bytes])-> Generator[None, None, Optional[str]]:
+        """Given a list of transactions, bundle them together in a single multisend tx."""
+        multi_send_txs = []
 
+        multi_send_approve_tx = self._to_multisend_format(txs[0], self.params.portfolio_token)
+        multi_send_txs.append(multi_send_approve_tx)
+
+        multi_send_sell_tx = self._to_multisend_format(txs[1], self.params.portfolio_manager_contract_address)
+        multi_send_txs.append(multi_send_sell_tx)
+
+        response = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
+            contract_address=self.MULTISEND_ADDRESS,
+            contract_id=str(MultiSendContract.contract_id),
+            contract_callable="get_tx_data",
+            multi_send_txs=multi_send_txs,
+        )
+
+        self.context.logger.info(f"PREPARED MULTISEND TXN:{response}")
+
+        if response.performative != ContractApiMessage.Performative.RAW_TRANSACTION:
+            self.context.logger.error(
+                f"Couldn't compile the multisend tx. "
+                f"Expected response performative {ContractApiMessage.Performative.RAW_TRANSACTION.value}, "  # type: ignore
+                f"received {response.performative.value}."
+            )
+            return None
+
+        # strip "0x" from the response
+        multisend_data_str = cast(str, response.raw_transaction.body["data"])[2:]
+        tx_data = bytes.fromhex(multisend_data_str)
+        tx_hash = yield from self._get_safe_tx_hash(tx_data, self.MULTISEND_ADDRESS, is_multisend=True)
+        
+        if tx_hash is None:
+            return None
+
+        payload_data = hash_payload_to_hex(
+            safe_tx_hash=tx_hash,
+            ether_value=self.ETHER_VALUE,
+            safe_tx_gas=SAFE_GAS,
+            operation=SafeOperation.DELEGATE_CALL.value,
+            to_address=self.MULTISEND_ADDRESS,
+            data=tx_data,
+        )
+        return payload_data
+
+    def _to_multisend_format(self, single_tx: bytes, to_address) -> Dict[str, Any]:
+        """This method puts tx data from a single tx into the multisend format."""
+        multisend_format = {
+            "operation": MultiSendOperation.CALL,
+            "to": to_address,
+            "value": self.ETHER_VALUE,
+            "data": HexBytes(single_tx),
+        }
+        return multisend_format   
 class LearningRoundBehaviour(AbstractRoundBehaviour):
     """LearningRoundBehaviour"""
 
