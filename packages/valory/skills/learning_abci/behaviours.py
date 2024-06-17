@@ -55,8 +55,7 @@ from packages.valory.skills.learning_abci.rounds import (
 from packages.valory.skills.transaction_settlement_abci.payload_tools import (
     hash_payload_to_hex,
 )
-
-
+from packages.valory.skills.abstract_round_abci.io_.store import SupportedFiletype
 import json
 
 HTTP_OK = 200
@@ -97,9 +96,29 @@ class APICheckBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
         with self.context.benchmark_tool.measure(self.behaviour_id).local():
             sender = self.context.agent_address
             price = yield from self.get_price()
-            payload = APICheckPayload(sender=sender, price=price)
-            self.context.logger.info(f"PRICE RETRIEVED FROM COINGECKO API- {price}")   
+            self.context.logger.info(f"PRICE RETRIEVED FROM COINGECKO API- {price}") 
+            
+            #dummy data
+            rebalancing_rules = {
+                "user_id": "user123",
+                "rules": {
+                    "thresholds": {
+                        "deviation": 0.05
+                    },
+                    "frequency": "weekly",
+                    "no_trade_tokens": ["XYZ"]
+                }
+            }
 
+            ipfs_hash = yield from self.send_to_ipfs(
+                "rebalancing-rules.json", 
+                {"rebalancing-rules" : rebalancing_rules}, 
+                filetype=SupportedFiletype.JSON
+            )
+
+            self.context.logger.info(f"IPFS HASH- {ipfs_hash}")
+            payload = APICheckPayload(sender=sender, price=price, ipfs_hash=ipfs_hash)
+  
         with self.context.benchmark_tool.measure(self.behaviour_id).consensus():
             yield from self.send_a2a_transaction(payload)
             yield from self.wait_until_round_end()
@@ -129,9 +148,8 @@ class APICheckBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
             return price
         except json.JSONDecodeError:
             self.context.logger.error("APICHECK_BEHAVIOUR says: Could not parse the response body!") 
-            return None       
-
-
+            return None 
+    
 class DecisionMakingBehaviour(
     LearningBaseBehaviour
 ):  # pylint: disable=too-many-ancestors
@@ -192,6 +210,13 @@ class TxPreparationBehaviour(
         Check whether sell or buy txn needs to be made
         If sell, then bundle approve txn with that
         """
+
+        # We can get the rebalancing rules from IPFS and then make an informed decision
+        rules = yield from self.get_from_ipfs(
+            self.synchronized_data.ipfs_hash, filetype=SupportedFiletype.JSON
+        )
+        self.context.logger.info(f"DATA RETRIEVED FROM IPFS {rules}")
+        
         token = self.params.portfolio_token
 
         (decision, amount) = yield from self._get_token_rebalance_amount(token)

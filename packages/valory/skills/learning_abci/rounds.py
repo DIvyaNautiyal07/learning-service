@@ -87,6 +87,11 @@ class SynchronizedData(BaseSynchronizedData):
     def tx_submitter(self) -> str:
         """Get the round that submitted a tx to transaction_settlement_abci."""
         return str(self.db.get_strict("tx_submitter"))
+    
+    @property
+    def ipfs_hash(self) -> Optional[str]:
+        """Get the hash value."""
+        return self.db.get("ipfs_hash", None)
 
 
 class APICheckRound(CollectSameUntilThresholdRound):
@@ -97,7 +102,7 @@ class APICheckRound(CollectSameUntilThresholdRound):
     done_event = Event.DONE
     no_majority_event = Event.NO_MAJORITY
     collection_key = get_name(SynchronizedData.participant_to_price_round)
-    selection_key = get_name(SynchronizedData.price)
+    selection_key = (get_name(SynchronizedData.price), get_name(SynchronizedData.ipfs_hash))
 
     # Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
 
