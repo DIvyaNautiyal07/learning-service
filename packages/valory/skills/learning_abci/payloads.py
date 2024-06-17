@@ -36,8 +36,8 @@ class APICheckPayload(BaseTxPayload):
 @dataclass(frozen=True)
 class DecisionMakingPayload(BaseTxPayload):
     """Represent a transaction payload for the DecisionMakingRound."""
-
-    event: str
+    
+    decision: str
 
 
 @dataclass(frozen=True)

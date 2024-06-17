@@ -50,7 +50,7 @@ from packages.valory.skills.learning_abci.rounds import (
     LearningAbciApp,
     SynchronizedData,
     TxPreparationRound,
-    Event
+    PortfolioAction
 )
 from packages.valory.skills.transaction_settlement_abci.payload_tools import (
     hash_payload_to_hex,
@@ -58,14 +58,10 @@ from packages.valory.skills.transaction_settlement_abci.payload_tools import (
 from packages.valory.skills.abstract_round_abci.io_.store import SupportedFiletype
 import json
 
-HTTP_OK = 200
-GNOSIS_CHAIN_ID = "gnosis"
 TX_DATA = b"0x"
 SAFE_GAS = 0
-VALUE_KEY = "value"
-TO_ADDRESS_KEY = "to_address"
-SELL = "sell"
-BUY = "buy"
+MULTISEND_ADDRESS = "0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761"
+
 class LearningBaseBehaviour(BaseBehaviour, ABC):  # pylint: disable=too-many-ancestors
     """Base behaviour for the learning_abci skill."""
 
@@ -123,8 +119,6 @@ class APICheckBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
             yield from self.send_a2a_transaction(payload)
             yield from self.wait_until_round_end()
 
-        self.set_done()
-
     def get_price(self) -> Generator[None, None, Optional[int]]:
 
         response = yield from self.get_http_response(
@@ -161,22 +155,43 @@ class DecisionMakingBehaviour(
         """Do the act, supporting asynchronous execution."""
 
         with self.context.benchmark_tool.measure(self.behaviour_id).local(): 
-            if self.synchronized_data.price == None:
-                event = Event.ERROR.value
-            #implement custom logic to check the condition for portfolio rebalance
-            elif self.synchronized_data.price > self.params.decision_threshold:
-                event= Event.TRANSACT.value
-            else:
-                event= Event.DONE.value
-
+            decision = yield from self.make_transaction_decision()
+            self.context.logger.info(f"DECISION MADE: {decision}")
             sender = self.context.agent_address
-            payload = DecisionMakingPayload(sender=sender, event=event)
+            payload = DecisionMakingPayload(sender=sender, decision=decision)
 
         with self.context.benchmark_tool.measure(self.behaviour_id).consensus():
             yield from self.send_a2a_transaction(payload)
             yield from self.wait_until_round_end()
 
         self.set_done()
+    
+    def make_transaction_decision(self) -> Generator[None, None, str]:
+        """
+        Decide whether to buy or sell a token based on the deviation from the target percentage and the current price.
+        """
+        response = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
+            contract_id=str(PortfolioManagerContract.contract_id),
+            contract_callable="get_check_deviation_tx",
+            contract_address=self.params.portfolio_manager_contract_address,
+            token = self.params.portfolio_token
+        )
+
+        deviation = response.state.body['data']       
+        self.context.logger.info(f"DEVIATION IN TOKEN PERCENTAGE RETRIEVED FROM CONTRACT: {deviation}")
+
+        current_price = self.synchronized_data.price
+        # Determine action based on deviation, price, and thresholds
+        if deviation > self.params.min_deviation_threshold and current_price >= self.params.sell_price_range[0] and current_price <= self.params.sell_price_range[1]:
+            # Sell decision if price is within acceptable range
+            return PortfolioAction.SELL.value
+        elif deviation < -self.params.min_deviation_threshold and current_price >= self.params.buy_price_range[0] and current_price <= self.params.buy_price_range[1]:
+            # Buy decision if price is within acceptable range
+            return PortfolioAction.BUY.value
+        
+        # If deviation and/or price is not within thresholds, hold
+        return PortfolioAction.HOLD.value
 
 class TxPreparationBehaviour(
     LearningBaseBehaviour
@@ -185,9 +200,9 @@ class TxPreparationBehaviour(
 
     matching_round: Type[AbstractRound] = TxPreparationRound
     ETHER_VALUE = 0
-    MULTISEND_ADDRESS = "0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761"
     SELLER_ADDRESS = "0xBd748eeb04623605BC1566b3F7F7f3e904f9Fe6D"
     BUYER_ADDRESS = "0x82a05d94630479e409ee235E8A8C5B65c7f7560e"
+    AMOUNT= 10*18
 
     def async_act(self) -> Generator:
         """Do the act, supporting asynchronous execution."""
@@ -217,20 +232,14 @@ class TxPreparationBehaviour(
         )
         self.context.logger.info(f"DATA RETRIEVED FROM IPFS {rules}")
         
-        token = self.params.portfolio_token
-
-        (decision, amount) = yield from self._get_token_rebalance_amount(token)
-        self.context.logger.info(f" PORTFOLIO REBALANCE DECISION: {decision}")
-
-        if decision is None:
-            return "{}"
+        decision = self.synchronized_data.decision
         
-        if decision is BUY:
-            safe_txn = yield from self._build_buy_txn(amount, token)
+        if decision == PortfolioAction.BUY.value:
+            safe_txn = yield from self._build_buy_txn()
             return safe_txn
         
-        elif decision is SELL:
-            transactions = yield from self._build_approve_and_buy_txns(amount, token)
+        elif decision == PortfolioAction.SELL.value:
+            transactions = yield from self._build_approve_and_buy_txns()
             if transactions is None:
                 return "{}"
             
@@ -240,38 +249,15 @@ class TxPreparationBehaviour(
                 return "{}"
             return payload_data
 
-    def _get_token_rebalance_amount(self, token:str) -> Generator[None, None, Union[int, Tuple[str, int]]]:
-        #check the deviation in portfolio for the token and based on that take a decision
-        response = yield from self.get_contract_api_response(
-            performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
-            contract_id=str(PortfolioManagerContract.contract_id),
-            contract_callable="get_check_deviation_tx",
-            contract_address=self.params.portfolio_manager_contract_address,
-            token = token
-        )
-
-        deviation = response.state.body['data']       
-        self.context.logger.info(f"DEVIATION IN TOKEN PERCENTAGE RETRIEVED FROM CONTRACT: {deviation}")
-        amount = 10**18
-
-        #We can implement logic to get the amount of token based that we need to sell or buy based on the deviation
-        if deviation is None:
-            return ()     
-        if deviation < 0:
-            return (BUY, amount)
-        else:
-            return (SELL, amount)
-
-    
-    def _build_buy_txn(self, amount:int, token:str) -> Generator[None, None, str]:
+    def _build_buy_txn(self) -> Generator[None, None, str]:
 
         response = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
             contract_id=str(PortfolioManagerContract.contract_id),
             contract_callable="get_simulate_buy_tx",
             contract_address=self.params.portfolio_manager_contract_address,
-            token=token,
-            amount=amount,
+            token=self.params.portfolio_token,
+            amount=self.AMOUNT,
             buyer=self.BUYER_ADDRESS
         )
 
@@ -309,14 +295,14 @@ class TxPreparationBehaviour(
 
         return payload_data
     
-    def _build_sell_txn(self, amount:int, token:str) -> Generator[None, None, Optional[bytes]]:
+    def _build_sell_txn(self) -> Generator[None, None, Optional[bytes]]:
         response = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
             contract_id=str(PortfolioManagerContract.contract_id),
             contract_callable="get_simulate_sell_tx",
             contract_address=self.params.portfolio_manager_contract_address,
-            token=token,
-            amount=amount,
+            token=self.params.portfolio_token,
+            amount=self.AMOUNT,
             seller=self.SELLER_ADDRESS
         )
 
@@ -334,14 +320,14 @@ class TxPreparationBehaviour(
         data = bytes.fromhex(data_str)
         return data
     
-    def _build_approve_txn(self, amount:int, token:str) -> Generator[None, None, Optional[bytes]]:
+    def _build_approve_txn(self) -> Generator[None, None, Optional[bytes]]:
         response = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_STATE,  # type: ignore
             contract_id=str(ERC20.contract_id),
             contract_callable="build_approval_tx",
-            contract_address=token,
+            contract_address=self.params.portfolio_token,
             spender=self.params.portfolio_manager_contract_address,
-            amount=amount
+            amount=self.AMOUNT
         )
 
         self.context.logger.info(f"APPROVE TXN: {response}")
@@ -358,15 +344,15 @@ class TxPreparationBehaviour(
         data = bytes.fromhex(data_str)
         return data
     
-    def _build_approve_and_buy_txns(self, amount:int, token:str) -> Generator[None, None, Optional[List[bytes]]]:
+    def _build_approve_and_buy_txns(self) -> Generator[None, None, Optional[List[bytes]]]:
         transactions: List[bytes] = []
 
-        approve_tx_data = yield from self._build_approve_txn(amount, token)
+        approve_tx_data = yield from self._build_approve_txn()
         if approve_tx_data is None:
                 return None      
         transactions.append(approve_tx_data)
 
-        sell_tx_data = yield from self._build_sell_txn(amount, token)
+        sell_tx_data = yield from self._build_sell_txn()
         if sell_tx_data is None:
                 return None      
         transactions.append(sell_tx_data)
@@ -423,7 +409,7 @@ class TxPreparationBehaviour(
 
         response = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
-            contract_address=self.MULTISEND_ADDRESS,
+            contract_address=MULTISEND_ADDRESS,
             contract_id=str(MultiSendContract.contract_id),
             contract_callable="get_tx_data",
             multi_send_txs=multi_send_txs,
@@ -442,7 +428,7 @@ class TxPreparationBehaviour(
         # strip "0x" from the response
         multisend_data_str = cast(str, response.raw_transaction.body["data"])[2:]
         tx_data = bytes.fromhex(multisend_data_str)
-        tx_hash = yield from self._get_safe_tx_hash(tx_data, self.MULTISEND_ADDRESS, is_multisend=True)
+        tx_hash = yield from self._get_safe_tx_hash(tx_data, MULTISEND_ADDRESS, is_multisend=True)
         
         if tx_hash is None:
             return None
@@ -452,7 +438,7 @@ class TxPreparationBehaviour(
             ether_value=self.ETHER_VALUE,
             safe_tx_gas=SAFE_GAS,
             operation=SafeOperation.DELEGATE_CALL.value,
-            to_address=self.MULTISEND_ADDRESS,
+            to_address=MULTISEND_ADDRESS,
             data=tx_data,
         )
         return payload_data

@@ -22,7 +22,7 @@ skills:
 - valory/registration_abci:0.1.0:bafybeiek7zcsxbucjwzgqfftafhfrocvc7q4yxllh2q44jeemsjxg3rcfm
 - valory/reset_pause_abci:0.1.0:bafybeidw4mbx3os3hmv7ley7b3g3gja7ydpitr7mxbjpwzxin2mzyt5yam
 - valory/termination_abci:0.1.0:bafybeihq6qtbwt6i53ayqym63vhjexkcppy26gguzhhjqywfmiuqghvv44
-- valory/learning_abci:0.1.0:bafybeiaxzda3fjyc5orhhw4r3hgbnyd6b5cew27ko7wcmzox7dnrrdakf4
+- valory/learning_abci:0.1.0:bafybeidza3kddebogaduwikirbnokf3fwztgrquatsc7sgepjg4tvfbcfe
 - valory/transaction_settlement_abci:0.1.0:bafybeigtzlk4uakmd54rxnznorcrstsr52kta474lgrnvx5ovr546vj7sq
 behaviours:
   main:
@@ -139,8 +139,15 @@ models:
       portfolio_manager_contract_address: '0xF8d61603D3972eb49582E5fCf324EEF9E76a386D'
       portfolio_token: '0x0000000000000000000000000000000000000000'
       transfer_target_address: '0x1c51259cc468a61793f1877923A28F89F9eA4F26'
-      multisend_address: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761'
       decision_threshold: 130
+      multisend_address: '0x80f29f3f7e10C80CBcF11A74B1AC631397C5a385'
+      min_deviation_threshold: 2
+      sell_price_range:
+      - 130
+      - 140
+      buy_price_range:
+      - 130
+      - 140
     class_name: Params
   randomness_api:
     args:
