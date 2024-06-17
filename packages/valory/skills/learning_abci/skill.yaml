@@ -132,7 +132,7 @@ models:
       portfolio_token: '0x0000000000000000000000000000000000000000'
       transfer_target_address: '0x1c51259cc468a61793f1877923A28F89F9eA4F26'
       multisend_address: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761'
-      decision_threshold: 150
+      decision_threshold: 130
     class_name: Params
   requests:
     args: {}
