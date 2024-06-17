@@ -4,6 +4,8 @@ This service interacts with the Portfolio Manager contract to manage a user's po
 ## Deployment Details
 - Safe and Service have been deployed to Gnosis Tenderly Fork.
 - Components and Agent have been minted to Ethereum Tenderly Fork.
+- Portfolio Manager Contract Address: 0x797971c6f8034ae377c6ebe8edce59ea19e089eb
+- Test Token: 0x0937ebb510ff99f7371ae4bcf6980c630777b0f6
 
 ## Overview
 The Portfolio Manager contract tracks the percentage of tokens a user wants to maintain in their portfolio. For testing purposes, custom ERC-20 tokens have been deployed. The service queries the contract to check the percentage deviation for a particular token and decides how to balance the portfolio based on this information.
