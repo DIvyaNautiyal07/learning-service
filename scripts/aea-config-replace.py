@@ -56,11 +56,6 @@ def main() -> None:
                 "portfolio_token"
             ] = f"${{str:{os.getenv('PORTFOLIO_TOKEN')}}}"  # type: ignore
 
-        if os.getenv("MULTISEND_ADDRESS"):
-            config[-1]["models"]["params"]["args"][
-                "multisend_address"
-            ] = f"${{str:{os.getenv('MULTISEND_ADDRESS')}}}"  # type: ignore
-
         if os.getenv("TRANSFER_TARGET_ADDRESS"):
             config[-1]["models"]["params"]["args"][
                 "transfer_target_address"
@@ -80,6 +75,26 @@ def main() -> None:
             config[-1]["models"]["params"]["args"]["setup"][
                 "all_participants"
             ] = f"${{list:{os.getenv('ALL_PARTICIPANTS')}}}" 
+        
+        if os.getenv("MULTISEND_ADDRESS"):
+            config[-1]["models"]["params"]["args"][
+                "multisend_address"
+            ] = f"${{str:{os.getenv('MULTISEND_ADDRESS')}}}"  # type: ignore
+
+        if os.getenv("MIN_DEVIATION_THRESHOLD"):
+            config[-1]["models"]["params"]["args"][
+                "min_deviation_threshold"
+            ] = f"${{list:{os.getenv('MIN_DEVIATION_THRESHOLD')}}}"
+
+        if os.getenv("SELL_PRICE_RANGE"):
+            config[-1]["models"]["params"]["args"][
+                "sell_price_range"
+            ] = f"${{list:{os.getenv('SELL_PRICE_RANGE')}}}"
+        
+        if os.getenv("BUY_PRICE_RANGE"):
+            config[-1]["models"]["params"]["args"][
+                "buy_price_range"
+            ] = f"${{list:{os.getenv('BUY_PRICE_RANGE')}}}"
 
     with open(Path("learning_agent", "aea-config.yaml"), "w", encoding="utf-8") as file:
         yaml.dump_all(config, file, sort_keys=False)

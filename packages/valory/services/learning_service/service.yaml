@@ -7,7 +7,7 @@ license: Apache-2.0
 fingerprint:
   README.md: bafybeid42pdrf6qrohedylj4ijrss236ai6geqgf3he44huowiuf7pl464
 fingerprint_ignore_patterns: []
-agent: valory/learning_agent:0.1.0:bafybeicozsj5ywk44oxncumjplrof5ujybtrf5buendfyzbkvp2t4b57ty
+agent: valory/learning_agent:0.1.0:bafybeiexmj65qgymzpavjaimg55eqjgaypvmoj2ifultzerbgtik7r7wqy
 number_of_agents: 4
 deployment:
   agent:
@@ -94,6 +94,9 @@ extra:
         portfolio_manager_contract_address: ${PORTFOLIO_MANAGER_CONTRACT_ADDRESS:str:0xeae6646e3405e60c51650f8a09e939cb1ad47cf1}
         portfolio_token: ${PORTFOLIO_TOKEN:str:0x0000000000000000000000000000000000000000}
         transfer_target_address: ${TRANSFER_TARGET_ADDRESS:str:0x615d3278680337e2D39C3bc5042D959C7938B917}
+        min_deviation_threshold: ${MIN_DEVIATION_THRESHOLD:int:2}
+        sell_price_range: ${SELL_PRICE_RANGE:list:[130, 140]}
+        buy_price_range: ${BUY_PRICE_RANGE:list:[130, 140]}
         multisend_address: ${MULTISEND_ADDRESS:str:0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761}
 1:
   models:
@@ -142,6 +145,9 @@ extra:
         portfolio_manager_contract_address: ${PORTFOLIO_MANAGER_CONTRACT_ADDRESS:str:0xeae6646e3405e60c51650f8a09e939cb1ad47cf1}
         portfolio_token: ${PORTFOLIO_TOKEN:str:0x0000000000000000000000000000000000000000}
         transfer_target_address: ${TRANSFER_TARGET_ADDRESS:str:0x615d3278680337e2D39C3bc5042D959C7938B917}
+        min_deviation_threshold: ${MIN_DEVIATION_THRESHOLD:int:2}
+        sell_price_range: ${SELL_PRICE_RANGE:list:[130, 140]}
+        buy_price_range: ${BUY_PRICE_RANGE:list:[130, 140]}
         multisend_address: ${MULTISEND_ADDRESS:str:0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761}
 2:
   models:
@@ -190,6 +196,9 @@ extra:
         portfolio_manager_contract_address: ${PORTFOLIO_MANAGER_CONTRACT_ADDRESS:str:0xeae6646e3405e60c51650f8a09e939cb1ad47cf1}
         portfolio_token: ${PORTFOLIO_TOKEN:str:0x0000000000000000000000000000000000000000}
         transfer_target_address: ${TRANSFER_TARGET_ADDRESS:str:0x615d3278680337e2D39C3bc5042D959C7938B917}
+        min_deviation_threshold: ${MIN_DEVIATION_THRESHOLD:int:2}
+        sell_price_range: ${SELL_PRICE_RANGE:list:[130, 140]}
+        buy_price_range: ${BUY_PRICE_RANGE:list:[130, 140]}
         multisend_address: ${MULTISEND_ADDRESS:str:0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761}
 3:
   models:
@@ -238,6 +247,9 @@ extra:
         portfolio_manager_contract_address: ${PORTFOLIO_MANAGER_CONTRACT_ADDRESS:str:0xeae6646e3405e60c51650f8a09e939cb1ad47cf1}
         portfolio_token: ${PORTFOLIO_TOKEN:str:0x0000000000000000000000000000000000000000}
         transfer_target_address: ${TRANSFER_TARGET_ADDRESS:str:0x615d3278680337e2D39C3bc5042D959C7938B917}
+        min_deviation_threshold: ${MIN_DEVIATION_THRESHOLD:int:2}
+        sell_price_range: ${SELL_PRICE_RANGE:list:[130, 140]}
+        buy_price_range: ${BUY_PRICE_RANGE:list:[130, 140]}
         multisend_address: ${MULTISEND_ADDRESS:str:0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761}
 ---
 public_id: valory/ledger:0.19.0

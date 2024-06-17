@@ -20,7 +20,7 @@
 """This package contains the rounds of LearningAbciApp."""
 
 from enum import Enum
-from typing import Dict, FrozenSet, Optional, Set, Tuple
+from typing import Dict, FrozenSet, Optional, Set, Tuple, cast
 
 from packages.valory.skills.abstract_round_abci.base import (
     AbciApp,
@@ -50,6 +50,11 @@ class Event(Enum):
     NO_MAJORITY = "no_majority"
     ROUND_TIMEOUT = "round_timeout"
 
+# Define an Enum for decision actions
+class PortfolioAction(Enum):
+    HOLD = "hold"
+    BUY = "buy"
+    SELL = "sell"
 
 class SynchronizedData(BaseSynchronizedData):
     """
@@ -90,8 +95,18 @@ class SynchronizedData(BaseSynchronizedData):
     
     @property
     def ipfs_hash(self) -> Optional[str]:
-        """Get the hash value."""
+        """Get the ipfs hash value."""
         return self.db.get("ipfs_hash", None)
+    
+    @property
+    def decision(self) -> Optional[str]:
+        """Get the decision value."""
+        return self.db.get("decision", None)
+    
+    @property
+    def participant_to_decision_round(self) -> Optional[str]:
+        """Get the participant_to_decision_round value."""
+        return self._get_deserialized("participant_to_decision_round")
 
 
 class APICheckRound(CollectSameUntilThresholdRound):
@@ -116,7 +131,20 @@ class DecisionMakingRound(CollectSameUntilThresholdRound):
     def end_block(self) -> Optional[Tuple[BaseSynchronizedData, Event]]:
         """Process the end of the block."""
         if self.threshold_reached:
-            return self.synchronized_data, Event(self.most_voted_payload)
+            event = Event.ERROR.value
+            if self.most_voted_payload == PortfolioAction.HOLD.value:
+                event = Event.DONE.value
+            elif self.most_voted_payload == PortfolioAction.BUY.value or self.most_voted_payload == PortfolioAction.SELL.value:
+                event = Event.TRANSACT.value
+
+            synchronized_data = cast(
+                SynchronizedData,
+                self.synchronized_data.update(
+                    synchronized_data_class=self.synchronized_data_class,
+                    **{get_name(SynchronizedData.decision): self.most_voted_payload},
+                ),
+            )
+            return synchronized_data, Event(event)
 
         if not self.is_majority_possible(
             self.collection, self.synchronized_data.nb_participants

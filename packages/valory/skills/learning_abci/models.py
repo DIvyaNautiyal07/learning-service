@@ -60,11 +60,17 @@ class Params(BaseParams):
         self.transfer_target_address = self._ensure(
             "transfer_target_address", kwargs, str
         )
-        # UNABLE TO RESOLVE THE ERROR aea.exceptions.AEAEnforceError: 'multisend_address' of type '<class 'str'>' required, but it is not set in `models.params.args` of `skill.yaml` of `valory/learning_chained_abci:0.1.0`
         # self.multisend_address = self._ensure(
         #     "multisend_address", kwargs, str
         # )
-        self.decision_threshold = self._ensure(
-            "decision_threshold", kwargs, int
+        self.min_deviation_threshold = self._ensure(
+            "min_deviation_threshold", kwargs, int
         )
+        self.sell_price_range = self._ensure(
+            "sell_price_range", kwargs, list
+        )
+        self.buy_price_range = self._ensure(
+            "buy_price_range", kwargs, list
+        )
+
         super().__init__(*args, **kwargs)

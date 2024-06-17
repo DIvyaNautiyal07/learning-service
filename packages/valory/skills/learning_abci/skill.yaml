@@ -7,13 +7,13 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiho3lkochqpmes4f235chq26oggmwnol3vjuvhosleoubbjirbwaq
-  behaviours.py: bafybeibxa4vzia75xwc4ijp77fzltexznorfmbeqsan5mn3bzh6dhy3zka
+  behaviours.py: bafybeigbe7mvuasgnblq7pyibxwxw25rdeh44rpu6kk732h74xoq2ffohi
   dialogues.py: bafybeifqjbumctlffx2xvpga2kcenezhe47qhksvgmaylyp5ypwqgfar5u
   fsm_specification.yaml: bafybeicitwm4meqniy5ewsaek5aj7o6c6e4pkosrbp44dwouv45viwg3tu
   handlers.py: bafybeigjadr4thz6hfpfx5abezbwnqhbxmachf4efasrn4z2vqhsqgnyvi
-  models.py: bafybeifd4ilzthxlquon2jza3rm5oje3wxvwpzjzlusygu6yw2ygcnhnly
-  payloads.py: bafybeia5wb27wdy3m7lwobzxkacnbq2k7umtmm2rczwvfpuvoktpbbfmam
-  rounds.py: bafybeie53pm3o52yk5dcoc3io663vczv7rkyy4w34snofxdypt6eerwxxq
+  models.py: bafybeig4yrpe2r5722gsqkvev5i24wfw3yo7nf4spog2x2nuw3g7rjs2mi
+  payloads.py: bafybeifm5vh5lmrd7z3haewttypjojicbthejgc72zy3iyloftr7lg4knu
+  rounds.py: bafybeie2pz2byzcp2j5p5cowt2dtby3xvtenah2eb6rl4wmbxsqzfoe2rm
 fingerprint_ignore_patterns: []
 connections: []
 contracts:
@@ -131,8 +131,14 @@ models:
       portfolio_manager_contract_address: '0xF8d61603D3972eb49582E5fCf324EEF9E76a386D'
       portfolio_token: '0x0000000000000000000000000000000000000000'
       transfer_target_address: '0x1c51259cc468a61793f1877923A28F89F9eA4F26'
-      multisend_address: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761'
-      decision_threshold: 130
+      multisend_address: '0x80f29f3f7e10C80CBcF11A74B1AC631397C5a385'
+      min_deviation_threshold: 2
+      sell_price_range:
+      - 130
+      - 140
+      buy_price_range:
+      - 130
+      - 140
     class_name: Params
   requests:
     args: {}
