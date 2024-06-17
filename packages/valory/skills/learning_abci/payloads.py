@@ -30,6 +30,7 @@ class APICheckPayload(BaseTxPayload):
     """Represent a transaction payload for the APICheckRound."""
 
     price: Optional[float]
+    ipfs_hash: str
 
 
 @dataclass(frozen=True)

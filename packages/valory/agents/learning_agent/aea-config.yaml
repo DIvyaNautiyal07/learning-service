@@ -19,7 +19,7 @@ contracts:
 - valory/gnosis_safe_proxy_factory:0.1.0:bafybeib6podeifufgmawvicm3xyz3uaplbcrsptjzz4unpseh7qtcpar74
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 - valory/service_registry:0.1.0:bafybeicbxmbzt757lbmyh6762lrkcrp3oeum6dk3z7pvosixasifsk6xlm
-- valory/erc20:0.1.0:bafybeifnatgejky6awdvna3x23cnlcdaf6uhatynyxwvfn55seiutvpsmi
+- valory/erc20:0.1.0:bafybeigfwfy5nngbyntk7dbk5ujgw6bdu2flimqgkjvu4vm7a4ykquhupi
 - valory/portfolio_manager:0.1.0:bafybeigjsqdertb6346xsrcvechajpb54q4xas43ny7r7xv3v3itkneduq
 protocols:
 - open_aea/signing:1.0.0:bafybeihv62fim3wl2bayavfcg3u5e5cxu3b7brtu4cn5xoxd6lqwachasi
@@ -33,8 +33,8 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihat4giyc4bz6zopvahcj4iw53356pbtwfn7p4d5yflwly2qhahum
 - valory/abstract_round_abci:0.1.0:bafybeih3enhagoql7kzpeyzzu2scpkif6y3ubakpralfnwxcvxexdyvy5i
-- valory/learning_abci:0.1.0:bafybeifskooa2kiayunn6yavp2qhmwbskuxduajezsikalbql2ih5pxmfa
-- valory/learning_chained_abci:0.1.0:bafybeieciakob7scolwpybgx6hm4ivjhqtclcy4qvb5xrzo6pcodq4oz7y
+- valory/learning_abci:0.1.0:bafybeiaxzda3fjyc5orhhw4r3hgbnyd6b5cew27ko7wcmzox7dnrrdakf4
+- valory/learning_chained_abci:0.1.0:bafybeifblpp5hxdw5ymhhbuqqamgzubatmndfn6nvinhxd6zweauj45x64
 - valory/registration_abci:0.1.0:bafybeiek7zcsxbucjwzgqfftafhfrocvc7q4yxllh2q44jeemsjxg3rcfm
 - valory/reset_pause_abci:0.1.0:bafybeidw4mbx3os3hmv7ley7b3g3gja7ydpitr7mxbjpwzxin2mzyt5yam
 - valory/termination_abci:0.1.0:bafybeihq6qtbwt6i53ayqym63vhjexkcppy26gguzhhjqywfmiuqghvv44

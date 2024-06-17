@@ -8,7 +8,7 @@ aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeif5vpc3dfrlxlch7brbhmdwksabyzddpfqgm56vdbbkek3t3br6ke
   build/ERC20.json: bafybeiemn5b5nszuss7xj6lmvmjuendltp6wz7ubihdvd7c6wqw4bohbpa
-  contract.py: bafybeib35jinoycxcewidmatrwzpnsezw2pumzjoxd5aetya22dmdmofmu
+  contract.py: bafybeigjg62mb6yatqzmclyul6ja7bup42zaweayqx6uz7lwf2sie7dpsu
 fingerprint_ignore_patterns: []
 contracts: []
 class_name: ERC20
