@@ -9,6 +9,8 @@ This service interacts with the Portfolio Manager contract to manage a user's po
 The Portfolio Manager contract tracks the percentage of tokens a user wants to maintain in their portfolio. For testing purposes, custom ERC-20 tokens have been deployed. The service queries the contract to check the percentage deviation for a particular token and decides how to balance the portfolio based on this information.
 
 ## Current Logic
+### Rebalancing Rules
+- Rebalancing rules are stored on IPFS and can be retrieved to make informed decisions. Although these rules have not yet been used in the current code, they provide a foundation for implementing more sophisticated rebalancing strategies in the future.
 ### Deviation Check
 - Positive Deviation : The service decides to sell the token.
   - It calls a function in the Portfolio Manager contract, transferring the token from the Gnosis Safe to the seller's address.
