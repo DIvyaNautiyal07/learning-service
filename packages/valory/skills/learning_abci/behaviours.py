@@ -202,7 +202,7 @@ class TxPreparationBehaviour(
     ETHER_VALUE = 0
     SELLER_ADDRESS = "0xBd748eeb04623605BC1566b3F7F7f3e904f9Fe6D"
     BUYER_ADDRESS = "0x82a05d94630479e409ee235E8A8C5B65c7f7560e"
-    AMOUNT= 10*18
+    AMOUNT= 10**18
 
     def async_act(self) -> Generator:
         """Do the act, supporting asynchronous execution."""

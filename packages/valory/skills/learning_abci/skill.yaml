@@ -7,7 +7,7 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiho3lkochqpmes4f235chq26oggmwnol3vjuvhosleoubbjirbwaq
-  behaviours.py: bafybeigbe7mvuasgnblq7pyibxwxw25rdeh44rpu6kk732h74xoq2ffohi
+  behaviours.py: bafybeibu7mltnqppjt4n76km5wer2hz2dzykmtd3zby7dvldx65kbmvncy
   dialogues.py: bafybeifqjbumctlffx2xvpga2kcenezhe47qhksvgmaylyp5ypwqgfar5u
   fsm_specification.yaml: bafybeicitwm4meqniy5ewsaek5aj7o6c6e4pkosrbp44dwouv45viwg3tu
   handlers.py: bafybeigjadr4thz6hfpfx5abezbwnqhbxmachf4efasrn4z2vqhsqgnyvi
@@ -134,10 +134,10 @@ models:
       multisend_address: '0x80f29f3f7e10C80CBcF11A74B1AC631397C5a385'
       min_deviation_threshold: 2
       sell_price_range:
-      - 130
+      - 125
       - 140
       buy_price_range:
-      - 130
+      - 125
       - 140
     class_name: Params
   requests:
